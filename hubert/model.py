@@ -231,7 +231,7 @@ def hubert(
     return _hubert("hubert", 504, pretrained, progress)
 
 
-def hubert_soft_vc(
+def hubert_soft(
     pretrained: bool = True,
     progress: bool = True,
 ) -> Hubert:
