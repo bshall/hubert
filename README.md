@@ -35,7 +35,7 @@ with torch.no_grad():
 import torch, torchaudio
 
 # Load checkpoints
-hubert = torch.hub.load("bshall/hubert:main", "hubert").cuda()
+hubert = torch.hub.load("bshall/hubert:main", "hubert_discrete").cuda()
 kmeans = torch.hub.load("bshall/hubert:main", "kmeans100")
 
 # Load audio

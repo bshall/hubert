@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 URLS = {
-    "hubert": "https://github.com/bshall/hubert/releases/download/v0.1/hubert-e9416457.pt",
+    "hubert-discrete": "https://github.com/bshall/hubert/releases/download/v0.1/hubert-discrete-e9416457.pt",
     "hubert-soft": "https://github.com/bshall/hifigan/releases/download/v0.1/hubert-soft-0d54a1f4.pt",
     "kmeans100": "https://github.com/bshall/hifigan/releases/download/v0.1/kmeans100-50f36a95.pt",
 }
@@ -219,16 +219,16 @@ def _hubert(
     return hubert
 
 
-def hubert(
+def hubert_discrete(
     pretrained: bool = True,
     progress: bool = True,
 ) -> Hubert:
-    r"""HuBERT-Base from `"HuBERT: Self-Supervised Speech Representation Learning by Masked Prediction of Hidden Units" <https://arxiv.org/abs/2106.07447>`.
+    r"""HuBERT-Discrete from `"A Comparison of Discrete and Soft Speech Units for Improved Voice Conversion"`.
     Args:
         pretrained (bool): load pretrained weights into the model
         progress (bool): show progress bar when downloading model
     """
-    return _hubert("hubert", 504, pretrained, progress)
+    return _hubert("hubert-discrete", 504, pretrained, progress)
 
 
 def hubert_soft(
@@ -240,7 +240,7 @@ def hubert_soft(
         pretrained (bool): load pretrained weights into the model
         progress (bool): show progress bar when downloading model
     """
-    return _hubert("hubert_soft_vc", 100, pretrained, progress)
+    return _hubert("hubert-soft", 100, pretrained, progress)
 
 
 def _kmeans(

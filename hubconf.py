@@ -1,3 +1,3 @@
 dependencies = ["torch", "torchaudio", "sklearn"]
 
-from hubert import hubert, hubert_soft, kmeans100
+from hubert import hubert_discrete, hubert_soft, kmeans100
