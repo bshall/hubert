@@ -11,8 +11,8 @@ from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 URLS = {
     "hubert-discrete": "https://github.com/bshall/hubert/releases/download/v0.1/hubert-discrete-e9416457.pt",
-    "hubert-soft": "https://github.com/bshall/hifigan/releases/download/v0.1/hubert-soft-0d54a1f4.pt",
-    "kmeans100": "https://github.com/bshall/hifigan/releases/download/v0.1/kmeans100-50f36a95.pt",
+    "hubert-soft": "https://github.com/bshall/hubert/releases/download/v0.1/hubert-soft-0d54a1f4.pt",
+    "kmeans100": "https://github.com/bshall/hubert/releases/download/v0.1/kmeans100-50f36a95.pt",
 }
 
 
