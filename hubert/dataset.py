@@ -4,6 +4,7 @@ import numpy as np
 import json
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import Dataset
 import torchaudio
 
@@ -18,15 +19,22 @@ class AcousticUnitsDataset(Dataset):
         max_samples: int = 250000,
         train: bool = True,
     ):
+        self.wavs_dir = root / "wavs"
+        self.units_dir = root / "units"
+
         with open(root / "lengths.json") as file:
             self.lenghts = json.load(file)
 
         pattern = "train-*/**/*.wav" if train else "dev-*/**/*.wav"
+        metadata = (
+            (path, path.relative_to(self.wavs_dir).with_suffix("").as_posix())
+            for path in self.wavs_dir.rglob(pattern)
+        )
+        metadata = ((path, key) for path, key in metadata if key in self.lenghts)
         self.metadata = [
-            path
-            for path in root.rglob(pattern)
-            if self.lenghts[path.stem] > min_samples
+            path for path, key in metadata if self.lenghts[key] > min_samples
         ]
+
         self.sample_rate = sample_rate
         self.label_rate = label_rate
         self.min_samples = min_samples
@@ -37,10 +45,12 @@ class AcousticUnitsDataset(Dataset):
         return len(self.metadata)
 
     def __getitem__(self, index):
-        path = self.metadata[index]
+        wav_path = self.metadata[index]
+        units_path = self.units_dir / wav_path.relative_to(self.wavs_dir)
 
-        codes = np.load(path.with_suffix(".npy"))
-        wav, _ = torchaudio.load(path)
+        wav, _ = torchaudio.load(wav_path)
+        wav = F.pad(wav, ((400 - 320) // 2, (400 - 320) // 2))
+        codes = np.load(units_path.with_suffix(".npy"))
 
         return wav, torch.from_numpy(codes).long()
 

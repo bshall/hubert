@@ -65,7 +65,7 @@ class Hubert(nn.Module):
         x, mask = self.encode(x)
         x = self.proj(x)
         logits = self.logits(x)
-        return logits / 0.1, mask
+        return logits, mask
 
 
 class FeatureExtractor(nn.Module):
@@ -141,7 +141,6 @@ class TransformerEncoder(nn.Module):
         output_layer: Optional[int] = None,
     ) -> torch.Tensor:
         output = src
-        output_layer = output_layer if output_layer is not None else len(self.layers)
         for layer in self.layers[:output_layer]:
             output = layer(
                 output, src_mask=mask, src_key_padding_mask=src_key_padding_mask

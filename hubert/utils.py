@@ -1,6 +1,21 @@
 import torch
 
 
+class Metric:
+    def __init__(self):
+        self.steps = 0
+        self.value = 0
+
+    def update(self, value):
+        self.steps += 1
+        self.value += (value - self.value) / self.steps
+        return self.value
+
+    def reset(self):
+        self.steps = 0
+        self.value = 0
+
+
 def save_checkpoint(
     checkpoint_dir,
     hubert,
