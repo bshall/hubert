@@ -25,7 +25,7 @@ def discretize_dataset(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Discretize an audio dataset.")
+    parser = argparse.ArgumentParser(description="Discretize HuBERT features.")
     parser.add_argument(
         "in_dir",
         metavar="in-dir",

@@ -25,7 +25,7 @@ class AcousticUnitsDataset(Dataset):
         with open(root / "lengths.json") as file:
             self.lenghts = json.load(file)
 
-        pattern = "train-*/**/*.wav" if train else "dev-*/**/*.wav"
+        pattern = "train-*/**/*.flac" if train else "dev-*/**/*.flac"
         metadata = (
             (path, path.relative_to(self.wavs_dir).with_suffix("").as_posix())
             for path in self.wavs_dir.rglob(pattern)

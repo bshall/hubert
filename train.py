@@ -73,7 +73,7 @@ def train(rank, world_size, args):
     # Initialize models
     ####################################################################################
 
-    hubert = Hubert().to(rank)
+    hubert = Hubert(mask=args.mask).to(rank)
 
     if args.warmstart:
         checkpoint = torch.hub.load_state_dict_from_url(
@@ -166,15 +166,22 @@ def train(rank, world_size, args):
     logger.info(f"started at epoch: {start_epoch}")
     logger.info("**" * 40 + "\n")
 
-    average_masked_loss = Metric()
-    average_unmasked_loss = Metric()
-    average_masked_accuracy = Metric()
-    average_unmasked_accuracy = Metric()
+    if args.mask:
+        average_masked_loss = Metric()
+        average_unmasked_loss = Metric()
+        average_masked_accuracy = Metric()
+        average_unmasked_accuracy = Metric()
 
-    epoch_masked_loss = Metric()
-    epoch_unmasked_loss = Metric()
-    epoch_masked_accuracy = Metric()
-    epoch_unmasked_accuracy = Metric()
+        epoch_masked_loss = Metric()
+        epoch_unmasked_loss = Metric()
+        epoch_masked_accuracy = Metric()
+        epoch_unmasked_accuracy = Metric()
+    else:
+        average_loss = Metric()
+        average_accuracy = Metric()
+
+        epoch_loss = Metric()
+        epoch_accuracy = Metric()
 
     validation_loss = Metric()
     validation_accuracy = Metric()
@@ -183,10 +190,15 @@ def train(rank, world_size, args):
         train_sampler.set_epoch(epoch)
 
         hubert.train()
-        epoch_masked_loss.reset()
-        epoch_unmasked_loss.reset()
-        epoch_masked_accuracy.reset()
-        epoch_unmasked_accuracy.reset()
+        if args.mask:
+            epoch_masked_loss.reset()
+            epoch_unmasked_loss.reset()
+            epoch_masked_accuracy.reset()
+            epoch_unmasked_accuracy.reset()
+        else:
+            epoch_loss.reset()
+            epoch_accuracy.reset()
+
         for wavs, codes in train_loader:
             global_step += 1
             wavs, codes = wavs.to(rank), codes.to(rank)
@@ -199,16 +211,20 @@ def train(rank, world_size, args):
 
             with amp.autocast():
                 logits, mask = hubert(wavs)
-                length = min(mask.size(-1), codes.size(-1))
-                logits, mask, codes = (
-                    logits[:, :length, :],
-                    mask[:, :length],
-                    codes[:, :length],
+                length = min(
+                    mask.size(-1) if args.mask else float("inf"), codes.size(-1)
                 )
+                logits = logits[:, :length, :]
+                codes = codes[:, :length]
+                if args.mask:
+                    mask = mask[:, :length]
 
-                masked_loss = F.cross_entropy(logits[mask], codes[mask])
-                unmasked_loss = F.cross_entropy(logits[~mask], codes[~mask])
-                loss = masked_loss
+                if args.mask:
+                    masked_loss = F.cross_entropy(logits[mask], codes[mask])
+                    unmasked_loss = F.cross_entropy(logits[~mask], codes[~mask])
+                    loss = args.alpha * masked_loss + (1 - args.alpha) * unmasked_loss
+                else:
+                    loss = F.cross_entropy(logits.transpose(1, 2), codes)
 
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
@@ -218,51 +234,76 @@ def train(rank, world_size, args):
             scaler.step(optimizer)
             scaler.update()
 
-            masked_accuracy = logits[mask].argmax(dim=-1) == codes[mask]
-            masked_accuracy = torch.mean(masked_accuracy.float())
+            if args.mask:
+                masked_accuracy = logits[mask].argmax(dim=-1) == codes[mask]
+                masked_accuracy = torch.mean(masked_accuracy.float())
 
-            unmasked_accuracy = logits[~mask].argmax(dim=-1) == codes[~mask]
-            unmasked_accuracy = torch.mean(unmasked_accuracy.float())
+                unmasked_accuracy = logits[~mask].argmax(dim=-1) == codes[~mask]
+                unmasked_accuracy = torch.mean(unmasked_accuracy.float())
+            else:
+                accuracy = logits.argmax(dim=-1) == codes
+                accuracy = torch.mean(accuracy.float())
 
             ############################################################################
             # Update and log training metrics
             ############################################################################
 
-            average_masked_loss.update(masked_loss.item())
-            average_unmasked_loss.update(unmasked_loss.item())
-            average_masked_accuracy.update(masked_accuracy.item())
-            average_unmasked_accuracy.update(unmasked_accuracy.item())
+            if args.mask:
+                average_masked_loss.update(masked_loss.item())
+                average_unmasked_loss.update(unmasked_loss.item())
+                average_masked_accuracy.update(masked_accuracy.item())
+                average_unmasked_accuracy.update(unmasked_accuracy.item())
 
-            epoch_masked_loss.update(masked_loss.item())
-            epoch_unmasked_loss.update(unmasked_loss.item())
-            epoch_masked_accuracy.update(masked_accuracy.item())
-            epoch_unmasked_accuracy.update(unmasked_accuracy.item())
+                epoch_masked_loss.update(masked_loss.item())
+                epoch_unmasked_loss.update(unmasked_loss.item())
+                epoch_masked_accuracy.update(masked_accuracy.item())
+                epoch_unmasked_accuracy.update(unmasked_accuracy.item())
+            else:
+                average_loss.update(loss.item())
+                average_accuracy.update(accuracy.item())
+
+                epoch_loss.update(loss.item())
+                epoch_accuracy.update(accuracy.item())
 
             if rank == 0 and global_step % LOG_INTERVAL == 0:
-                writer.add_scalar(
-                    "train/masked_loss",
-                    average_masked_loss.value,
-                    global_step,
-                )
-                writer.add_scalar(
-                    "train/unmasked_loss",
-                    average_unmasked_loss.value,
-                    global_step,
-                )
-                writer.add_scalar(
-                    "train/masked_accuracy",
-                    average_masked_accuracy.value * 100,
-                    global_step,
-                )
-                writer.add_scalar(
-                    "train/unmasked_accuracy",
-                    average_unmasked_accuracy.value * 100,
-                    global_step,
-                )
-                average_masked_loss.reset()
-                average_unmasked_loss.reset()
-                average_masked_accuracy.reset()
-                average_unmasked_accuracy.reset()
+                if args.mask:
+                    writer.add_scalar(
+                        "train/masked_loss",
+                        average_masked_loss.value,
+                        global_step,
+                    )
+                    writer.add_scalar(
+                        "train/unmasked_loss",
+                        average_unmasked_loss.value,
+                        global_step,
+                    )
+                    writer.add_scalar(
+                        "train/masked_accuracy",
+                        average_masked_accuracy.value * 100,
+                        global_step,
+                    )
+                    writer.add_scalar(
+                        "train/unmasked_accuracy",
+                        average_unmasked_accuracy.value * 100,
+                        global_step,
+                    )
+                    average_masked_loss.reset()
+                    average_unmasked_loss.reset()
+                    average_masked_accuracy.reset()
+                    average_unmasked_accuracy.reset()
+                else:
+                    writer.add_scalar(
+                        "train/loss",
+                        average_loss.value,
+                        global_step,
+                    )
+                    writer.add_scalar(
+                        "train/accuracy",
+                        average_accuracy.value,
+                        global_step,
+                    )
+                    average_loss.reset()
+                    average_accuracy.reset()
 
             # --------------------------------------------------------------------------#
             # Start validation loop
@@ -367,28 +408,39 @@ def train_hubert(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train HuBERT")
+    parser = argparse.ArgumentParser(description="Train HuBERT soft content encoder.")
     parser.add_argument(
         "dataset_dir",
         metavar="dataset-dir",
-        help="path to the data directory",
+        help="path to the data directory.",
         type=Path,
     )
     parser.add_argument(
         "checkpoint_dir",
         metavar="checkpoint-dir",
-        help="path to the checkpoint directory",
+        help="path to the checkpoint directory.",
         type=Path,
     )
     parser.add_argument(
         "--resume",
-        help="path to the checkpoint to resume from",
+        help="path to the checkpoint to resume from.",
         type=Path,
     )
     parser.add_argument(
         "--warmstart",
-        help="whether to initialize from the fairseq HuBERT checkpoint",
+        help="whether to initialize from the fairseq HuBERT checkpoint.",
         action="store_true",
+    )
+    parser.add_argument(
+        "--mask",
+        help="whether to use input masking.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--alpha",
+        help="weight for the masked loss.",
+        default=1,
+        type=float,
     )
     args = parser.parse_args()
 

@@ -50,3 +50,61 @@ with torch.no_grad():
 # Extract discrete speech units
 units = kmeans.predict(x.squeeze().cpu().numpy())
 ```
+
+## Training
+
+**Step 1**: Download and extract LibriSpeech
+
+**Step 2**: Encode LibriSpeech using the HuBERT-Discrete model and `encode.py` script (setting `--layer=7`):
+
+```
+usage: encode.py [-h] [--extension EXTENSION] [--model {hubert_soft,hubert_discrete}] [--layer LAYER] in-dir out-dir
+
+Encode an audio dataset.
+
+positional arguments:
+  in-dir                path to the dataset directory.
+  out-dir               path to the output directory.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --extension EXTENSION
+                        extension of the audio files.
+  --model {hubert_soft,hubert_discrete}
+                        available models
+  --layer LAYER         the selected transformer layer (defaults to the last layer)
+```
+
+**Step 3**: Discretize the extracted features using the k-means checkpoint and `discretize.py` script:
+
+```
+usage: discretize.py [-h] in-dir out-dir
+
+Discretize HuBERT features.
+
+positional arguments:
+  in-dir      path to the dataset directory.
+  out-dir     path to the output directory.
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+**Step 5**: Train the HuBERT-Soft model using the `train.py` script:
+
+```
+usage: train.py [-h] [--resume RESUME] [--warmstart] [--mask] [--alpha ALPHA] dataset-dir checkpoint-dir
+
+Train HuBERT soft content encoder.
+
+positional arguments:
+  dataset-dir      path to the data directory.
+  checkpoint-dir   path to the checkpoint directory.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --resume RESUME  path to the checkpoint to resume from.
+  --warmstart      whether to initialize from the fairseq HuBERT checkpoint.
+  --mask           whether to use input masking.
+  --alpha ALPHA    weight for the masked loss.
+```

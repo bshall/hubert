@@ -63,7 +63,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--layer",
-        help="the transformer layer to extract from",
+        help="the selected transformer layer (defaults to the last layer)",
         default=None,
         type=int,
     )

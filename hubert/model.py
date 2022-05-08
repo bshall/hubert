@@ -17,8 +17,9 @@ URLS = {
 
 
 class Hubert(nn.Module):
-    def __init__(self, num_label_embeddings: int = 100):
+    def __init__(self, num_label_embeddings: int = 100, mask=True):
         super().__init__()
+        self._mask = mask
         self.feature_extractor = FeatureExtractor()
         self.feature_projection = FeatureProjection()
         self.positional_embedding = PositionalConvEmbedding()
@@ -37,7 +38,7 @@ class Hubert(nn.Module):
 
     def mask(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         mask = None
-        if self.training:
+        if self.training and self._mask:
             mask = _compute_mask((x.size(0), x.size(1)), 0.8, 10, x.device, 2)
             x[mask] = self.masked_spec_embed.to(x.dtype)
         return x, mask
