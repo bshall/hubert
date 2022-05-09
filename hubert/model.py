@@ -81,7 +81,7 @@ class HubertSoft(Hubert):
 
 class HubertDiscrete(Hubert):
     def __init__(self, kmeans):
-        super().__init__()
+        super().__init__(num_label_embeddings=504)
         self.kmeans = kmeans
 
     def units(self, wav: torch.Tensor) -> torch.LongTensor:
