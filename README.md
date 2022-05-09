@@ -56,10 +56,10 @@ units = kmeans.predict(x.squeeze().cpu().numpy())
 
 **Step 1**: Download and extract the [LibriSpeech](https://www.openslr.org/12) corpus.
 
-**Step 2**: Encode LibriSpeech using the HuBERT-Discrete model and `encode.py` script (setting `--layer=7`):
+**Step 2**: Encode LibriSpeech using the HuBERT-Discrete model and `encode.py` script:
 
 ```
-usage: encode.py [-h] [--extension EXTENSION] [--model {hubert_soft,hubert_discrete}] [--layer LAYER] in-dir out-dir
+usage: encode.py [-h] [--extension EXTENSION] [--model {hubert_soft,hubert_discrete}] in-dir out-dir
 
 Encode an audio dataset.
 
@@ -73,31 +73,15 @@ optional arguments:
                         extension of the audio files.
   --model {hubert_soft,hubert_discrete}
                         available models
-  --layer LAYER         the selected transformer layer (defaults to the last layer)
 ```
 
 for example:
 
 ```
-python encode.py path/to/LibriSpeech path/to/LibriSpeech/
+python encode.py path/to/LibriSpeech/wavs path/to/LibriSpeech/units --model hubert_discrete
 ```
 
-**Step 3**: Discretize the extracted features using the k-means checkpoint and `discretize.py` script:
-
-```
-usage: discretize.py [-h] in-dir out-dir
-
-Discretize HuBERT features.
-
-positional arguments:
-  in-dir      path to the dataset directory.
-  out-dir     path to the output directory.
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
-**Step 5**: Train the HuBERT-Soft model using the `train.py` script:
+**Step 3**: Train the HuBERT-Soft model using the `train.py` script:
 
 ```
 usage: train.py [-h] [--resume RESUME] [--warmstart] [--mask] [--alpha ALPHA] dataset-dir checkpoint-dir

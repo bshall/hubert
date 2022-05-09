@@ -5,7 +5,6 @@ from pathlib import Path
 from tqdm import tqdm
 
 import torch
-import torch.nn.functional as F
 import torchaudio
 from torchaudio.functional import resample
 
@@ -22,17 +21,13 @@ def encode_dataset(args):
         wav, sr = torchaudio.load(in_path)
         wav = resample(wav, sr, 16000)
         wav = wav.unsqueeze(0).cuda()
-        wav = F.pad(wav, ((400 - 320) // 2, (400 - 320) // 2))
 
-        # Extract hubert features from the args.layer transformer layer
         with torch.inference_mode():
-            x, _ = hubert.encode(wav, layer=args.layer)
-            if args.layer is None:
-                x = hubert.proj(x)
+            units = hubert.units(wav)
 
         out_path = args.out_dir / in_path.relative_to(args.in_dir)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(out_path.with_suffix(".npy"), x.squeeze(0).cpu().numpy())
+        np.save(out_path.with_suffix(".npy"), units.squeeze().cpu().numpy())
 
 
 if __name__ == "__main__":
@@ -60,12 +55,6 @@ if __name__ == "__main__":
         help="available models",
         choices=["hubert_soft", "hubert_discrete"],
         default="hubert_soft",
-    )
-    parser.add_argument(
-        "--layer",
-        help="the selected transformer layer (defaults to the last layer)",
-        default=None,
-        type=int,
     )
     args = parser.parse_args()
     encode_dataset(args)

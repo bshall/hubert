@@ -1,1 +1,8 @@
-from .model import Hubert, hubert_discrete, hubert_soft, kmeans100
+from .model import (
+    Hubert,
+    HubertDiscrete,
+    HubertSoft,
+    hubert_discrete,
+    hubert_soft,
+    kmeans100,
+)

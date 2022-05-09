@@ -17,7 +17,7 @@ URLS = {
 
 
 class Hubert(nn.Module):
-    def __init__(self, num_label_embeddings: int = 100, mask=True):
+    def __init__(self, num_label_embeddings: int = 100, mask: bool = True):
         super().__init__()
         self._mask = mask
         self.feature_extractor = FeatureExtractor()
@@ -67,6 +67,28 @@ class Hubert(nn.Module):
         x = self.proj(x)
         logits = self.logits(x)
         return logits, mask
+
+
+class HubertSoft(Hubert):
+    def __init__(self):
+        super().__init__()
+
+    def units(self, wav: torch.Tensor) -> torch.Tensor:
+        wav = F.pad(wav, ((400 - 320) // 2, (400 - 320) // 2))
+        x, _ = self.encode(wav)
+        return self.proj(x)
+
+
+class HubertDiscrete(Hubert):
+    def __init__(self, kmeans):
+        super().__init__()
+        self.kmeans = kmeans
+
+    def units(self, wav: torch.Tensor) -> torch.LongTensor:
+        wav = F.pad(wav, ((400 - 320) // 2, (400 - 320) // 2))
+        x, _ = self.encode(wav, layer=7)
+        x = self.kmeans.predict(x.squeeze().cpu().numpy())
+        return torch.tensor(x, dtype=torch.long, device=wav.device)
 
 
 class FeatureExtractor(nn.Module):
@@ -204,43 +226,45 @@ def _compute_mask(
     return mask
 
 
-def _hubert(
-    name: str,
-    num_label_embeddings: int,
+def hubert_discrete(
     pretrained: bool = True,
     progress: bool = True,
-) -> Hubert:
-    hubert = Hubert(num_label_embeddings)
+) -> HubertDiscrete:
+    r"""HuBERT-Discrete from `"A Comparison of Discrete and Soft Speech Units for Improved Voice Conversion"`.
+    Args:
+        pretrained (bool): load pretrained weights into the model
+        progress (bool): show progress bar when downloading model
+    """
+    kmeans = kmeans100(pretrained=pretrained, progress=progress)
+    hubert = HubertDiscrete(kmeans)
     if pretrained:
-        checkpoint = torch.hub.load_state_dict_from_url(URLS[name], progress=progress)
+        checkpoint = torch.hub.load_state_dict_from_url(
+            URLS["hubert-discrete"], progress=progress
+        )
         consume_prefix_in_state_dict_if_present(checkpoint, "module.")
         hubert.load_state_dict(checkpoint)
         hubert.eval()
     return hubert
 
 
-def hubert_discrete(
-    pretrained: bool = True,
-    progress: bool = True,
-) -> Hubert:
-    r"""HuBERT-Discrete from `"A Comparison of Discrete and Soft Speech Units for Improved Voice Conversion"`.
-    Args:
-        pretrained (bool): load pretrained weights into the model
-        progress (bool): show progress bar when downloading model
-    """
-    return _hubert("hubert-discrete", 504, pretrained, progress)
-
-
 def hubert_soft(
     pretrained: bool = True,
     progress: bool = True,
-) -> Hubert:
+) -> HubertSoft:
     r"""HuBERT-Soft from `"A Comparison of Discrete and Soft Speech Units for Improved Voice Conversion"`.
     Args:
         pretrained (bool): load pretrained weights into the model
         progress (bool): show progress bar when downloading model
     """
-    return _hubert("hubert-soft", 100, pretrained, progress)
+    hubert = HubertSoft()
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            URLS["hubert-soft"], progress=progress
+        )
+        consume_prefix_in_state_dict_if_present(checkpoint, "module.")
+        hubert.load_state_dict(checkpoint)
+        hubert.eval()
+    return hubert
 
 
 def _kmeans(
