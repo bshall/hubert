@@ -1,12 +1,13 @@
 # HuBERT
 
-The HuBERT-Soft and HuBERT-Discrete models for [soft-vc](https://github.com/bshall/soft-vc).
+Training and inference scripts for the HuBERT content encoders in [A Comparison of Discrete and Soft Speech Units for Improved Voice Conversion](https://ieeexplore.ieee.org/abstract/document/9746484). 
+For more details see HuBERT-Soft the [soft-vc](https://github.com/bshall/soft-vc) repo.
 
 Relevant links:
+- [Soft-VC repo](https://github.com/bshall/soft-vc)
+- [Soft-VC paper](https://ieeexplore.ieee.org/abstract/document/9746484)
 - [Official HuBERT repo](https://github.com/pytorch/fairseq)
 - [HuBERT paper](https://arxiv.org/abs/2106.07447)
-- [Soft-VC repo](https://github.com/bshall/soft-vc)
-- [Soft-VC paper]()
 
 ## Example Usage
 
@@ -53,7 +54,7 @@ units = kmeans.predict(x.squeeze().cpu().numpy())
 
 ## Training
 
-**Step 1**: Download and extract LibriSpeech
+**Step 1**: Download and extract the [LibriSpeech](https://www.openslr.org/12) corpus.
 
 **Step 2**: Encode LibriSpeech using the HuBERT-Discrete model and `encode.py` script (setting `--layer=7`):
 
@@ -73,6 +74,12 @@ optional arguments:
   --model {hubert_soft,hubert_discrete}
                         available models
   --layer LAYER         the selected transformer layer (defaults to the last layer)
+```
+
+for example:
+
+```
+python encode.py path/to/LibriSpeech path/to/LibriSpeech/
 ```
 
 **Step 3**: Discretize the extracted features using the k-means checkpoint and `discretize.py` script:
