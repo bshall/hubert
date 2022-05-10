@@ -73,6 +73,7 @@ class HubertSoft(Hubert):
     def __init__(self):
         super().__init__()
 
+    @torch.inference_mode()
     def units(self, wav: torch.Tensor) -> torch.Tensor:
         wav = F.pad(wav, ((400 - 320) // 2, (400 - 320) // 2))
         x, _ = self.encode(wav)
@@ -81,9 +82,10 @@ class HubertSoft(Hubert):
 
 class HubertDiscrete(Hubert):
     def __init__(self, kmeans):
-        super().__init__(num_label_embeddings=504)
+        super().__init__(504)
         self.kmeans = kmeans
 
+    @torch.inference_mode()
     def units(self, wav: torch.Tensor) -> torch.LongTensor:
         wav = F.pad(wav, ((400 - 320) // 2, (400 - 320) // 2))
         x, _ = self.encode(wav, layer=7)
