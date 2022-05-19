@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def encode_dataset(args):
     print(f"Loading hubert checkpoint")
-    hubert = torch.hub.load("bshall/hubert:main", args.model).cuda()
+    hubert = torch.hub.load("bshall/hubert:main", f"hubert_{args.model}").cuda()
 
     print(f"Encoding dataset at {args.in_dir}")
     for in_path in tqdm(list(args.in_dir.rglob(f"*{args.extension}"))):
@@ -33,6 +33,11 @@ def encode_dataset(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Encode an audio dataset.")
     parser.add_argument(
+        "model",
+        help="available models (HuBERT-Soft or HuBERT-Discrete)",
+        choices=["soft", "discrete"],
+    )
+    parser.add_argument(
         "in_dir",
         metavar="in-dir",
         help="path to the dataset directory.",
@@ -46,15 +51,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--extension",
-        help="extension of the audio files.",
+        help="extension of the audio files (defaults to .flac).",
         default=".flac",
         type=str,
-    )
-    parser.add_argument(
-        "--model",
-        help="available models",
-        choices=["hubert_soft", "hubert_discrete"],
-        default="hubert_soft",
     )
     args = parser.parse_args()
     encode_dataset(args)
