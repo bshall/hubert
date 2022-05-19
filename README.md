@@ -1,7 +1,17 @@
 # HuBERT
 
 Training and inference scripts for the HuBERT content encoders in [A Comparison of Discrete and Soft Speech Units for Improved Voice Conversion](https://ieeexplore.ieee.org/abstract/document/9746484). 
-For more details see HuBERT-Soft the [soft-vc](https://github.com/bshall/soft-vc) repo.
+For more details see [soft-vc](https://github.com/bshall/).
+
+<div align="center">
+    <img width="2685" height="1069" alt="Soft-VC"
+      src="https://raw.githubusercontent.com/bshall/hubert/main/diagram.png"><br>
+    <sup>
+      <strong>Fig 1:</strong>Architecture of the voice conversion system. a) The <strong>discrete</strong> content encoder clusters audio features to produce a sequence of discrete speech units. b) The <strong>soft</strong> content encoder is trained to predict the discrete units. The acoustic model transforms the discrete/soft speech units into a target spectrogram. The vocoder converts the spectrogram into an audio waveform.
+    </sup>
+</div>
+
+[TOC]
 
 Relevant links:
 - [Soft-VC repo](https://github.com/bshall/soft-vc)
