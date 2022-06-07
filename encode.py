@@ -8,9 +8,6 @@ import torch
 import torchaudio
 from torchaudio.functional import resample
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 
 def encode_dataset(args):
     print(f"Loading hubert checkpoint")
