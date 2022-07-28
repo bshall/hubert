@@ -62,8 +62,6 @@ optional arguments:
 
 Download and extract the [LibriSpeech](https://www.openslr.org/12) corpus. The training script expects the following tree structure for the dataset directory:
 
-The training script expects the following tree structure for the dataset directory:
-
 ```
 │   lengths.json
 │
@@ -113,7 +111,7 @@ for example:
 python encode.py discrete path/to/LibriSpeech/wavs path/to/LibriSpeech/units
 ```
 
-At this point the directory tree look like:
+At this point the directory tree should look like:
 
 ```
 │   lengths.json
