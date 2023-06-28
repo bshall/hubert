@@ -108,7 +108,7 @@ optional arguments:
 for example:
 
 ```
-python encode.py discrete path/to/LibriSpeech/wavs path/to/LibriSpeech/units
+python encode.py discrete path/to/LibriSpeech/wavs path/to/LibriSpeech/discrete
 ```
 
 At this point the directory tree should look like:
