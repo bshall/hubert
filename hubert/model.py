@@ -243,8 +243,8 @@ def hubert_discrete(
         checkpoint = torch.hub.load_state_dict_from_url(
             URLS["hubert-discrete"], progress=progress
         )
-        consume_prefix_in_state_dict_if_present(checkpoint, "module.")
-        hubert.load_state_dict(checkpoint)
+        consume_prefix_in_state_dict_if_present(checkpoint["hubert"], "module.")
+        hubert.load_state_dict(checkpoint["hubert"])
         hubert.eval()
     return hubert
 
@@ -263,8 +263,8 @@ def hubert_soft(
         checkpoint = torch.hub.load_state_dict_from_url(
             URLS["hubert-soft"], progress=progress
         )
-        consume_prefix_in_state_dict_if_present(checkpoint, "module.")
-        hubert.load_state_dict(checkpoint)
+        consume_prefix_in_state_dict_if_present(checkpoint["hubert"], "module.")
+        hubert.load_state_dict(checkpoint["hubert"])
         hubert.eval()
     return hubert
 
