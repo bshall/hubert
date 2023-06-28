@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # Define hyperparameters for training:
 ########################################################################################
 
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 LEARNING_RATE = 2e-5
 BETAS = (0.9, 0.98)
 EPS = 1e-06
@@ -35,7 +35,7 @@ MAX_NORM = 10
 STEPS = 25000
 LOG_INTERVAL = 5
 VALIDATION_INTERVAL = 1000
-CHECKPOINT_INTERVAL = 1000
+CHECKPOINT_INTERVAL = 5000
 BACKEND = "nccl"
 INIT_METHOD = "tcp://localhost:54321"
 
@@ -79,8 +79,14 @@ def train(rank, world_size, args):
         checkpoint = torch.hub.load_state_dict_from_url(
             URLS["hubert-discrete"], map_location={"cuda:0": f"cuda:{rank}"}
         )
-        consume_prefix_in_state_dict_if_present(checkpoint, "module.")
-        hubert.load_state_dict(checkpoint, strict=False)
+        consume_prefix_in_state_dict_if_present(checkpoint["hubert"], "module.")
+
+        # don't use warmstart weights for label embeddings and proj layer
+        del checkpoint["hubert"]["label_embedding.weight"]
+        del checkpoint["hubert"]["proj.weight"]
+        del checkpoint["hubert"]["proj.bias"]
+
+        hubert.load_state_dict(checkpoint["hubert"], strict=False)
 
     hubert = DDP(hubert, device_ids=[rank])
 

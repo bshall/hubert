@@ -53,6 +53,9 @@ def load_checkpoint(
     logger.info(f"Loading checkpoint from {load_path}")
     checkpoint = torch.load(load_path, map_location={"cuda:0": f"cuda:{rank}"})
     hubert.load_state_dict(checkpoint["hubert"])
-    scaler.load_state_dict(checkpoint["scaler"])
-    optimizer.load_state_dict(checkpoint["optimizer"])
-    return checkpoint["step"], checkpoint["loss"]
+    if "scaler" in checkpoint:
+        scaler.load_state_dict(checkpoint["scaler"])
+    if "optimizer" in checkpoint:
+        optimizer.load_state_dict(checkpoint["optimizer"])
+    step, loss = checkpoint.get("step", 0), checkpoint.get("loss", float("inf"))
+    return step, loss
