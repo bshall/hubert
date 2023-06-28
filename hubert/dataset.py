@@ -20,7 +20,7 @@ class AcousticUnitsDataset(Dataset):
         train: bool = True,
     ):
         self.wavs_dir = root / "wavs"
-        self.units_dir = root / "units"
+        self.units_dir = root / "discrete"
 
         with open(root / "lengths.json") as file:
             self.lenghts = json.load(file)
