@@ -11,7 +11,11 @@ from torchaudio.functional import resample
 
 def encode_dataset(args):
     print(f"Loading hubert checkpoint")
-    hubert = torch.hub.load("bshall/hubert:main", f"hubert_{args.model}").cuda()
+    hubert = torch.hub.load(
+        "bshall/hubert:main",
+        f"hubert_{args.model}",
+        trust_repo=True,
+    ).cuda()
 
     print(f"Encoding dataset at {args.in_dir}")
     for in_path in tqdm(list(args.in_dir.rglob(f"*{args.extension}"))):
