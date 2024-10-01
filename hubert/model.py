@@ -153,7 +153,9 @@ class PositionalConvEmbedding(nn.Module):
             padding=128 // 2,
             groups=16,
         )
-        self.conv = nn.utils.weight_norm(self.conv, name="weight", dim=2)
+        self.conv = nn.utils.parametrizations.weight_norm(
+            self.conv, name="weight", dim=2
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv(x.transpose(1, 2))
