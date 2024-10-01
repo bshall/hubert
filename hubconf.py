@@ -11,7 +11,14 @@ from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 
 from sklearn.cluster import KMeans
 
-from hubert import HubertDiscrete, HubertSoft
+from hubert import Hubert, HubertDiscrete, HubertSoft
+
+
+def hubert() -> Hubert:
+    r"""Randomly initialized HuBERT from `"A Comparison of Discrete and Soft Speech Units for Improved Voice Conversion"`"""
+    hubert = Hubert(504)
+    hubert.eval()
+    return hubert
 
 
 def hubert_discrete(
